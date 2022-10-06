@@ -118,9 +118,10 @@ pub fn handler(
 
 #[derive(Accounts)]
 pub struct WithdrawAllTokenTypes<'info> {
+    #[account(mut)]
     pub amm: Box<Account<'info, Amm>>,
     /// CHECK: Safe
-    #[account(seeds=[b"authority", amm.key().as_ref()], bump)]
+    #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub authority: AccountInfo<'info>,
     /// CHECK: Safe
     #[account(mut)]
@@ -139,8 +140,7 @@ pub struct WithdrawAllTokenTypes<'info> {
     )]
     pub vault_token_b: Account<'info, TokenAccount>,
     #[account(mut,
-        //constraint = destination.mint == pool_mint.key(),
-        seeds=[b"pool_mint", amm.key().as_ref()], bump
+        mint::authority = authority
     )]
     pub pool_mint: Box<Account<'info, Mint>>,
     /// CHECK: Safe

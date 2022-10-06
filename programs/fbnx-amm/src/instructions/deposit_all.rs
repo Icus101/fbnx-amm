@@ -110,9 +110,10 @@ pub fn handler(
 
 #[derive(Accounts)]
 pub struct DepositAllTokenTypes<'info> {
+    #[account(mut)]
     pub amm: Box<Account<'info, Amm>>,
     /// CHECK: Safe
-    #[account(seeds=[b"authority", amm.key().as_ref()], bump)]
+    #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub pool_authority: AccountInfo<'info>,
     /// CHECK: Safe
     // #[account(signer)]
@@ -136,9 +137,7 @@ pub struct DepositAllTokenTypes<'info> {
     )]
     pub vault_token_b: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = destination.mint == pool_mint.key(),
-        seeds=[b"pool_mint", amm.key().as_ref()], bump
-
+        mint::authority = pool_authority,
     )]
     pub pool_mint:Box< Account<'info, Mint>>,
     /// CHECK: Safe

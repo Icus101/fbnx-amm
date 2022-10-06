@@ -123,9 +123,10 @@ pub fn handler(
 
 #[derive(Accounts)]
 pub struct WithdrawSingleTokenType<'info> {
+    #[account(mut)]
     pub amm: Box<Account<'info, Amm>>,
     /// CHECK: Safe
-    #[account(seeds=[b"authority", amm.key().as_ref()], bump)]
+    #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub authority: AccountInfo<'info>,
     /// CHECK: Safe
     pub owner: Signer<'info>,
@@ -142,7 +143,7 @@ pub struct WithdrawSingleTokenType<'info> {
     )]
     pub swap_token_b: Account<'info, TokenAccount>,
     #[account(mut,
-        seeds=[b"pool_mint", amm.key().as_ref()], bump
+        mint::authority = authority
     )]
     pub pool_mint: Account<'info, Mint>,
     #[account(mut,

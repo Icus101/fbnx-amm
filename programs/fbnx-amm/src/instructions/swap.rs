@@ -151,13 +151,10 @@ pub fn handler(ctx: Context<Swap>, amount_in: u64, minimum_amount_out: u64) -> R
 #[derive(Accounts)]
 pub struct Swap<'info> {
     /// CHECK: Safe
-    #[account(seeds=[b"authority", amm.key().as_ref()], bump)]
+    #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub pool_authority: AccountInfo<'info>,
+    #[account(mut)]
     pub amm: Box<Account<'info, Amm>>,
-    /// CHECK: Safe
-    // #[account(signer)]
-    // pub user_transfer_authority: AccountInfo<'info>,
-    /// CHECK: Safe
     #[account(
         mut,
         constraint=vault_source_info.owner == pool_authority.key(),

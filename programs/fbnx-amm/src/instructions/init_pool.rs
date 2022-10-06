@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, MintTo,Token, TokenAccount};
+use std::mem::size_of;
 
 
 use crate:: state::*;
@@ -17,18 +18,19 @@ pub fn handler(
         return Err(SwapError::AlreadyInUse.into());
     }
 
-    let (_swap_authority, bump_seed) = Pubkey::find_program_address(
-         &[&ctx.accounts.amm.to_account_info().key.to_bytes()],
+    let (swap_authority, bump_seed) = Pubkey::find_program_address(
+         &[b"authority".as_ref(),&ctx.accounts.amm.to_account_info().key.to_bytes()],
          ctx.program_id,
      );
     let seeds = &[
+        b"authority".as_ref(),
          &ctx.accounts.amm.to_account_info().key.to_bytes(),
          &[bump_seed][..],
      ];
 
-    // if *ctx.accounts.pool_authority.key != swap_authority {
-    //     return Err(SwapError::InvalidProgramAddress.into());
-    // }
+     if *ctx.accounts.pool_authority.key != swap_authority {
+         return Err(SwapError::InvalidProgramAddress.into());
+     }
     if *ctx.accounts.pool_authority.key != ctx.accounts.vault0.owner {
         return Err(SwapError::InvalidOwner.into());
     }
@@ -119,45 +121,59 @@ pub fn handler(
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     /// CHECK: Safe
-    #[account(seeds=[b"authority", amm.key().as_ref()], bump)]
+    #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub pool_authority: AccountInfo<'info>,
     #[account(
-         zero         
+        init,
+        seeds = [b"amm".as_ref(),mint0.key().as_ref(),mint1.key().as_ref()],
+        bump,
+        payer = payer,
+        space =  8 + size_of::<Amm>()        
     )]
     pub amm: Box<Account<'info, Amm>>,
     // pool mint : used to track relative contribution amount of LPs
     #[account(
-        init, 
+        init,
+        seeds = [b"pool_mint".as_ref(),amm.key().as_ref()],
+        bump,  
         payer=payer,
-        seeds=[b"pool_mint", amm.key().as_ref()], 
-        bump, 
         mint::decimals = 2,
         mint::authority = pool_authority
     )] 
-    pub pool_mint: Account<'info, Mint>,
+    pub pool_mint: Box<Account<'info, Mint>>,
     // account to hold token X
     #[account(
-        init, 
+        init,
+        seeds = [b"vault0".as_ref(),amm.key().as_ref()],
+        bump, 
         payer=payer, 
-        seeds=[b"vault0", amm.key().as_ref()], 
-        bump,
         token::mint = mint0,
         token::authority = pool_authority
     )]
-    pub vault0: Box<Account<'info, TokenAccount>>,
+    pub vault0: Box<Account<'info, TokenAccount>>,//Token Associated Token Account for the first vault
     #[account(
         init, 
         payer=payer, 
-        seeds=[b"vault1", amm.key().as_ref()],
+        seeds = [b"vault1".as_ref(),amm.key().as_ref()],
         bump,
         token::mint = mint1,
         token::authority = pool_authority
     )]
-    pub vault1: Box<Account<'info, TokenAccount>>, 
-    #[account(mut)]
-    pub fee_account: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub destination: Account<'info, TokenAccount>,
+    pub vault1: Box<Account<'info, TokenAccount>>, //Token Associated Token Account for the 2nd vault
+    #[account(
+        init,
+        payer = payer,
+        token::mint = pool_mint,
+        token::authority = payer
+    )]
+    pub fee_account: Account<'info, TokenAccount>, //Token Associated Token Account for the fee Account
+    #[account(
+        init,
+        payer = payer,
+        token::mint = pool_mint,
+        token::authority = payer
+    )]
+    pub destination: Account<'info, TokenAccount>,//Token Associated Token Account for the pool mint
     #[account(mut)]
     pub payer: Signer<'info>,
     // pool for token_x -> token_y 
