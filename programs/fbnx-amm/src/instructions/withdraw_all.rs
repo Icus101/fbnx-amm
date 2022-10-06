@@ -140,7 +140,7 @@ pub struct WithdrawAllTokenTypes<'info> {
     )]
     pub vault_token_b: Account<'info, TokenAccount>,
     #[account(mut,
-        mint::authority = authority
+        mint::authority = authority.key()
     )]
     pub pool_mint: Box<Account<'info, Mint>>,
     /// CHECK: Safe

@@ -143,7 +143,7 @@ pub struct WithdrawSingleTokenType<'info> {
     )]
     pub swap_token_b: Account<'info, TokenAccount>,
     #[account(mut,
-        mint::authority = authority
+        mint::authority = authority.key()
     )]
     pub pool_mint: Account<'info, Mint>,
     #[account(mut,
