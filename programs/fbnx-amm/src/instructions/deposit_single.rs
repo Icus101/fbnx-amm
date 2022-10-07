@@ -109,7 +109,7 @@ pub struct DepositSingleTokenType<'info> {
     /// CHECK: Safe
     #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
     pub authority: AccountInfo<'info>,
-    /// CHECK: Safe
+    #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut,
         has_one = owner
@@ -128,12 +128,16 @@ pub struct DepositSingleTokenType<'info> {
     )]
     pub pool_mint: Account<'info, Mint>,
     /// CHECK: Safe
-    #[account(mut,
-        token::mint = pool_mint.key(),
+    #[account(
+        init_if_needed,
+        payer = owner,
+        token::mint = pool_mint,
+        token::authority= owner
     )]
-    pub destination: Account<'info,TokenAccount>,
-    /// CHECK: Safe
+    pub destination: Box<Account<'info,TokenAccount>>,
+    pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info,Token>,
+    pub system_program : Program<'info,System>
 }
 
 impl<'info> DepositSingleTokenType<'info> {

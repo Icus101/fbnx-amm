@@ -141,12 +141,18 @@ pub struct DepositAllTokenTypes<'info> {
     )]
     pub pool_mint:Box< Account<'info, Mint>>,
     /// CHECK: Safe
-    #[account(mut,
-        token::mint = pool_mint.key()
+    #[account(
+        init_if_needed,
+        payer = owner,
+        token::mint = pool_mint,
+        token::authority = owner
     )]
-    pub destination: Account<'info,TokenAccount>,
+    pub destination: Box<Account<'info,TokenAccount>>,
+    #[account(mut)]
     pub owner: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info,Token>,
+    pub system_program : Program<'info,System>
 }
 
 impl<'info> DepositAllTokenTypes<'info> {
