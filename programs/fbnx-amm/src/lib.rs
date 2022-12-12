@@ -9,7 +9,7 @@ pub mod curve;
 use instructions::*;
 use crate::state::*;
 
-declare_id!("FzbA7oybquXL6sNn71hPU2RQh1kbRiDtCGbwmk34VFR2");
+declare_id!("Bq1VBjFa8nfDaiuPfbb63LnYqTQJtg4ZAnPKf6NMRSat");
 
 #[program]
 pub mod fbnx_amm {

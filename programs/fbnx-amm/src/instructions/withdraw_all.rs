@@ -118,7 +118,11 @@ pub fn handler(
 
 #[derive(Accounts)]
 pub struct WithdrawAllTokenTypes<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"amm".as_ref(),amm.token_a_mint.as_ref(),amm.token_b_account.as_ref()],
+        bump,
+     )]
     pub amm: Box<Account<'info, Amm>>,
     /// CHECK: Safe
     #[account(seeds=[b"authority".as_ref(), amm.key().as_ref()], bump)]
